@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      &backend-build
+      context: ./
+      dockerfile: ./docker/dockerfile.dev
+    image: &backend-image ${PROJECT_NAME}:${APP_VERSION}
+    restart: &backend-restart unless-stopped
+    volumes:
+      &backend-volumes
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+    cap_add:
+      - SYS_PTRACE
+    # environment:
+    #   &backend-environment
+    ports:
+      - "80:8000"
+    depends_on:
+      &backend-depends-on
+      - dragonflydb
+      - postgres
+
+  postgres:
+    image: "postgres:${POSTGRES_IMAGE_TAG}"
+    volumes:
+      - database-data:/var/lib/postgresql/data/
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+    ports:
+      - "5431:5432"
+    environment:
+      - POSTGRES_USER=${DATABASE_USER}
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+      - POSTGRES_DB=${DATABASE_NAME}
+    restart: unless-stopped
+
+  dragonflydb:
+    image: "docker.dragonflydb.io/dragonflydb/dragonfly"
+    command: dragonfly
+    restart: unless-stopped
+    ulimits:
+      memlock: -1
+    volumes:
+      - redis-data:/data
+      - ./docker/redis:/usr/local/etc/redis
+    ports:
+      - "6379:6379"
+
+volumes:
+  database-data:
+  redis-data:
