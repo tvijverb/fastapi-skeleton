@@ -1,4 +1,4 @@
-fastapi==0.95.0
+fastapi==0.110.0
 uvicorn==0.21.1
 SQLAlchemy==2.0.7
 asyncpg==0.27.0
